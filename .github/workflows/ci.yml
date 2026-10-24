@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Canvas tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+      - name: Server starts and serves Canvas
+        run: |
+          node server.mjs & sleep 2
+          curl -fsS http://127.0.0.1:4173/canvas/ | grep -q 'id="repository-select"'
+          curl -fsS -o /dev/null http://127.0.0.1:4173/canvas/ramrattan-shield.png

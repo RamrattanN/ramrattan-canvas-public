@@ -1,0 +1,36 @@
+Ramrattan Canvas
+Copyright 2026 The Ramrattan Consultancy
+
+The software source code is licensed under the Apache License, Version 2.0
+(see LICENSE). This notice distinguishes that grant from rights in branding
+and separately identified visual assets.
+
+Reserved names and visual assets
+--------------------------------
+
+The Apache License, Version 2.0, section 6 does not grant permission to use
+trade names, trademarks, service marks, or product names, except for customary
+and reasonable use in describing the origin of the work and reproducing
+NOTICE content.
+
+No copyright or other license to the following visual assets is granted by
+the software's Apache-2.0 license. Rights, if any, remain with their
+respective rights holders:
+
+  - The Ramrattan shield: ramrattan-shield.png.
+  - The Orbitron Sprocket Works illustration: brands/orbitron-portrait.png.
+  - Screenshots in docs/demo/images/ containing the above branding or art.
+
+The names "The Ramrattan Consultancy", "Ramrattan", "Ramrattan Canvas",
+and "Orbitron Sprocket Works" are not offered for adoption as another
+project's branding.
+
+These assets are present to illustrate the original Canvas application and
+its fictional demonstration. Their inclusion does not establish copyright
+ownership, trademark registration, or permission for independent reuse.
+Anyone distributing a modified or rebranded version must obtain any
+necessary rights or replace restricted assets. Accurate attribution and
+customary descriptions of this project's origin remain permitted.
+
+This NOTICE does not change the Apache-2.0 license applicable to the software
+source code or assert rights that the named parties may not own.

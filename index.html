@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d2942">
+    <title>Project Delivery Board</title>
+    <link rel="stylesheet" href="./board.css?v=5">
+    <script type="module" src="./board.mjs"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#board" aria-label="The Ramrattan Consultancy Kanban Canvas home">
+        <img class="brand-logo" src="/canvas/ramrattan-shield.png" alt="Ramrattan shield">
+        <span class="brand-name">The Ramrattan <b>Consultancy</b></span>
+      </a>
+      <div class="topbar-right">
+        <div class="topbar-group repository-group">
+          <label class="repository-picker"><span>Repository</span><select id="repository-select" aria-describedby="repository-status"><option>Loading…</option></select><small id="repository-status" class="repository-status" aria-live="polite"></small></label>
+          <small id="repository-account" class="repository-account" aria-live="polite"></small>
+        </div>
+        <span class="source-indicator"><i></i> GitHub is the record</span>
+        <div class="topbar-group topbar-actions">
+          <button class="button button-outline" id="reload-repositories" type="button">Reload repositories</button>
+          <button class="button button-refresh" id="refresh-button" type="button">Refresh from GitHub</button>
+          <button class="button button-outline" id="import-trigger" type="button">Import JSON</button>
+          <button class="button button-light" id="export-button" type="button">Export board</button>
+        </div>
+        <input id="import-file" type="file" accept="application/json,.json" hidden>
+      </div>
+    </header>
+
+    <main id="board" class="workspace">
+      <section class="heading-row" aria-labelledby="page-title">
+        <div>
+          <p class="kicker">PROJECT WORKSPACE <span id="snapshot-kind">AGENT-IMPORTED SNAPSHOT</span></p>
+          <div class="project-title">
+            <span class="project-mark"><img id="project-logo" class="project-logo" alt="" width="48" height="48" hidden><span id="project-initials" class="project-initials" aria-hidden="true"></span></span>
+            <h1 id="page-title"><span id="project-name"></span> <em>| Project Delivery Board</em></h1>
+          </div>
+          <p class="subhead">A local planning view for <b id="repository-name"></b>.  GitHub issues and pull requests remain authoritative.</p>
+        </div>
+        <div class="snapshot-box" aria-live="polite">
+          <span class="snapshot-label">Last refreshed</span>
+          <strong id="snapshot-time">Loading…</strong>
+          <span id="snapshot-note">No live sync.  Changes stay in this browser.</span>
+        </div>
+      </section>
+
+      <section class="view-switcher" aria-label="Record views">
+        <button class="view-button is-selected" type="button" data-view="Active work" aria-pressed="true">Active work</button>
+        <button class="view-button" type="button" data-view="All records" aria-pressed="false">All records</button>
+        <button class="view-button" type="button" data-view="History" aria-pressed="false">History</button>
+        <span id="view-description" class="view-description">Open GitHub records and historical cards you have retained.</span>
+      </section>
+
+      <section class="summary-row" aria-label="Operational delivery summary">
+        <div class="summary-stat summary-primary"><strong id="active-board-count">0</strong><span>Active board cards</span></div>
+        <div class="summary-stat"><strong id="active-github-count">0</strong><span>Active GitHub records</span></div>
+        <div class="summary-stat"><strong id="blocked-count">0</strong><span>Blocked active work</span></div>
+        <div class="summary-stat"><strong id="review-count">0</strong><span>In review</span></div>
+        <div class="summary-stat"><strong id="done-count">0</strong><span>Done recently</span></div>
+        <div class="summary-note"><span><b id="total-completed-count">0</b> total completed</span><span><b id="history-count">0</b> total historical</span><span><b id="total-count">0</b> total tracked</span><small>Done recently is a subset of completed; completed is a subset of historical.</small></div>
+        <div class="summary-limit" role="group" aria-label="Active column display">
+          <label><span>Cards per active column</span><select id="lane-limit"><option value="25">25</option><option value="50">50</option><option value="75">75</option><option value="100">100</option><option value="200">200</option><option value="all" selected>All</option><option value="custom">Custom</option></select></label>
+          <label id="lane-limit-custom-field"><span class="sr-only">Custom cards per active column</span><input id="lane-limit-custom" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="1 to 10000" aria-label="Custom cards per active column, 1 to 10000" hidden></label>
+        </div>
+      </section>
+
+      <section class="filterbar" aria-label="Board filters and sort">
+        <label class="search-field"><span class="sr-only">Search cards</span><input id="search" type="search" placeholder="Search title or number" autocomplete="off"></label>
+        <label><span>GitHub status</span><select id="filter-github-status"><option value="">All GitHub statuses</option></select></label>
+        <label><span>Completion</span><select id="filter-completion-status"><option value="">All completion states</option></select></label>
+        <label><span>Completed from (UTC)</span><input id="filter-completed-from" type="date" aria-label="Completed on or after this UTC date"></label>
+        <label><span>Completed to (UTC)</span><input id="filter-completed-to" type="date" aria-label="Completed on or before this UTC date"></label>
+        <label><span>Kanban lane</span><select id="filter-lane"><option value="">All Kanban lanes</option></select></label>
+        <label><span>Priority</span><select id="filter-priority"><option value="">All priorities</option></select></label>
+        <label><span>Type</span><select id="filter-type"><option value="">All types</option></select></label>
+        <label><span>Workstream</span><select id="filter-workstream"><option value="">All workstreams</option></select></label>
+        <label class="sort-control"><span>Sort</span><select id="sort-order"><option value="manual">Board order</option><option value="priority">Priority</option><option value="updated">Recently updated</option><option value="number">Record number</option></select></label>
+        <button id="clear-filters" class="button button-quiet" type="button">Clear filters</button>
+      </section>
+      <p id="filter-summary" class="filter-summary" aria-live="polite"></p>
+
+      <div class="board-heading"><h2 id="board-heading">Active work</h2><p>GitHub status is authoritative.  Kanban lane, priority, and notes are local planning decisions.  Done shows the latest 20 verified completions in a rolling 14-day window.</p></div>
+      <section id="board-grid" class="board-grid" aria-label="Kanban board"></section>
+      <p id="empty-state" class="empty-state" hidden>No cards match these filters.</p>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    </main>
+
+    <footer class="footer">
+      <span>The Ramrattan Consultancy · Internal planning canvas</span>
+      <span>Read-only GitHub data · Local browser state · No write-back</span>
+      <a href="./README.md">Setup and limitations</a>
+    </footer>
+  </body>
+</html>
