@@ -22,14 +22,14 @@ GitHub alone decides what is done:
 
 - A pull request is completed when GitHub reports it merged.  An issue is completed when GitHub closed it as completed.
 - Not-planned issues, issues closed without a reason, and closed, unmerged pull requests are never counted as completed.
-- Done shows completions from the last 14 days, newest first, up to 20 cards.  Older completions stay in **History**.
+- **Done column display** defaults to 20 completions from the last 14 days.  Select 50, 100 or All to view older verified completions, newest first.  Older completions always remain searchable in **History**.
 - A reopened record returns to active work.
 
 ## Card limits, search, and filters
 
 ![Card limit, search, and filters](https://github.com/RamrattanN/ramrattan-canvas-public/raw/main/docs/demo/images/05-search-filters-card-limit.png)
 
-- **Cards per active column**, in the summary panel, limits the cards shown in each working lane: 25, 50, 75, 100, 200, All, or Custom (1 to 10,000).  Lane counts stay complete, and capped lanes show **Showing N of M**.  Done is never limited.  The setting is saved per repository.
+- **Cards per active column**, in the summary panel, limits the cards shown in each working lane: 25, 50, 75, 100, 200, All, or Custom (1 to 10,000).  Lane counts stay complete, and capped lanes show **Showing N of M**.  Done has a separate 20 / 50 / 100 / All display setting.  Both settings are saved per repository.
 - Search covers titles, numbers, and notes.  Filters cover GitHub status, completion, completion dates (UTC), lane, priority, type, and workstream.  **Clear filters** resets them.
 - **Board order** keeps your manual card order.  Other sorts are by priority, recent update, or number.
 

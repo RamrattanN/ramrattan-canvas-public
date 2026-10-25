@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ACTIVE_LANE_LIMITS, BOARD_STATUSES, MAX_CUSTOM_LANE_LIMIT, DONE_WINDOW_MS, STORAGE_KEY, legacyRepositoryFromStorage, getBoardMetrics, getCompletionDateISO, getCompletionStatus, getCompletionTimestamp, getDisplayLane, getRecentDoneRecords, isActiveRecord, isHistoricalRecord, isValidRepositoryName, limitActiveLane, matchesFilters, mergeLaneOrder, normalizeLaneLimit, repositoryDisplayName, repositoryIdentity, mergeGitHubRecords, migrateManualOrder, needsCompletionRefresh, normalizeGitHubImport, normalizeGitHubRecord, recordsForView, sanitizeGitHubText, sortCards, storageKeyForRepository } from "./board-core.mjs";
+import { ACTIVE_LANE_LIMITS, BOARD_STATUSES, MAX_CUSTOM_LANE_LIMIT, DONE_WINDOW_MS, STORAGE_KEY, legacyRepositoryFromStorage, getBoardMetrics, getCompletionDateISO, getCompletionStatus, getCompletionTimestamp, getDisplayLane, getRecentDoneRecords, getDisplayedDoneRecords, normalizeDoneDisplay, isActiveRecord, isHistoricalRecord, isValidRepositoryName, limitActiveLane, matchesFilters, mergeLaneOrder, normalizeLaneLimit, repositoryDisplayName, repositoryIdentity, mergeGitHubRecords, migrateManualOrder, needsCompletionRefresh, normalizeGitHubImport, normalizeGitHubRecord, recordsForView, sanitizeGitHubText, sortCards, storageKeyForRepository } from "./board-core.mjs";
 
 const repository = "Example-Owner/example-repo";
 
@@ -510,4 +510,18 @@ test("repository identity uses trusted configuration with an initials fallback",
   assert.deepEqual(repositoryIdentity("Owner/repo", untrusted), { displayName: "Example", icon: "", iconAlt: "", iconFit: "cover", initials: "E" });
   assert.equal(repositoryIdentity("Owner/script", untrusted).icon, "");
   assert.equal(repositoryIdentity("Owner/__proto__", { __proto__: { displayName: "Injected" } }).displayName, "Proto");
+});
+
+
+test("Done display supports 20 recent by default and 50, 100, All across history", () => {
+  const now = new Date("2026-10-24T12:00:00Z");
+  const records = normalizeGitHubImport({ repository, records: Array.from({ length: 125 }, (_, index) => ({ number: index + 1, type: "pr", title: `Merged ${index}`, state: "closed", merged: true, mergedAt: new Date(now.getTime() - (index + 1) * 86400000).toISOString() })) }, repository).records;
+  assert.equal(getDisplayedDoneRecords(records, now).length, 14);
+  assert.equal(getDisplayedDoneRecords(records, now, 50).length, 50);
+  assert.equal(getDisplayedDoneRecords(records, now, 100).length, 100);
+  assert.equal(getDisplayedDoneRecords(records, now, "all").length, 125);
+  assert.equal(recordsForView(records, "Active work", now, 50).length, 50);
+  assert.equal(normalizeDoneDisplay("malformed"), 20);
+  assert.equal(normalizeDoneDisplay("50"), 50);
+  assert.equal(normalizeDoneDisplay("all"), "all");
 });
