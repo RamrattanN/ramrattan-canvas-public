@@ -64,7 +64,7 @@ The Done column defaults to the newest 20 verified completions from the past 14 
 
 ## Demonstration board
 
-The fictional Orbitron Sprocket Works board is built from a bundled synthetic snapshot of 30 `[DEMO]` records, with no GitHub access needed.  `npm run demo:fixture` builds the board, and `npm run demo:capture` verifies it in a disposable Chrome profile and regenerates the screenshots in `docs/demo/images/`.  See [docs/demo/orbitron-sprocket-works.md](docs/demo/orbitron-sprocket-works.md).
+The fictional Orbitron Sprocket Works board is built from a bundled synthetic snapshot of 30 `[DEMO]` records, with no GitHub access needed.  `npm run demo:fixture` builds the board, and `npm run demo:capture` verifies it in a disposable Chrome profile and regenerates the screenshots in `docs/demo/images/`, writing the overview image to `demo/out/` for review.  See [docs/demo/orbitron-sprocket-works.md](docs/demo/orbitron-sprocket-works.md).
 
 ## Troubleshooting
 

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test board-core.test.mjs github-reader.test.mjs demo/fixture.test.mjs scripts/distribution.test.mjs",
+    "test": "node --test board-core.test.mjs github-reader.test.mjs demo/fixture.test.mjs demo/screenshot-checks.test.mjs scripts/distribution.test.mjs",
     "demo:fixture": "node demo/generate-fixture.mjs",
     "demo:capture": "node --experimental-websocket demo/capture.mjs",
     "dist:prepare": "node scripts/prepare-distribution.mjs"

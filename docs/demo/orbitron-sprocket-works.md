@@ -65,21 +65,27 @@ npm run demo:capture
 - lanes kept after a Refresh from GitHub, served from the synthetic snapshot;
 - an Export board and Import JSON round trip;
 - the cards-per-column limit;
-- storage isolation.
+- storage isolation;
+- before each screenshot, that the image starts at the top-left corner of the page and spans its full width, with the application header, Ramrattan shield, Orbitron logo, and project title inside it;
+- the controls each screenshot is meant to show;
+- that only the synthetic account, the demo repository, and its records appear, with no email addresses;
+- that each image's dimensions match its capture boundary.
 
 Your normal Canvas server on port 4173 and your browser's saved boards are never touched.  Set `CHROME_PATH` if Chrome or Edge is not installed in the default location.
 
 ## Screenshots
 
-`npm run demo:capture` writes these images to `docs/demo/images/`:
+Every image shows the full application header and the Orbitron project title above its subject.  The browser is 2034 CSS pixels wide at 1.875 device pixels per CSS pixel, which matches the approved overview image and keeps card controls inside each lane.
 
 | Image | Shows |
 |---|---|
-| `01-board-overview.png` | The complete six-column board with **All** cards. |
+| `01-board-overview.png` | The whole page, header to footer, with the complete six-column board and **All** cards. |
 | `02-repository-and-account.png` | Repository selector, synthetic account, and the Orbitron project heading. |
-| `03-planning-cards.png` | Blocked cards with priorities, workstreams, and local notes. |
-| `04-done-merged-prs.png` | Done column with merged pull requests. |
-| `05-search-filters-card-limit.png` | Summary panel with **Cards per active column** set to 5, search, and filters. |
+| `03-planning-cards.png` | The Blocked lane, selected with the **Kanban lane** filter, with priorities, workstreams, and local notes. |
+| `04-done-merged-prs.png` | The Done lane, selected with the **Kanban lane** filter, with merged pull requests. |
+| `05-search-filters-card-limit.png` | **Cards per active column** set to Custom (5), **Done column display** at 20 (recent 14 days), search, and filters. |
+
+`npm run demo:capture` writes images 02 to 05 to `docs/demo/images/`.  The published overview is a reviewed image, so the capture writes its overview to `demo/out/01-board-overview.png` instead.  Copy it over `docs/demo/images/01-board-overview.png` only after it has been reviewed and approved.
 
 The Orbitron and Ramrattan artwork in these images is reserved; see `NOTICE`.
 
