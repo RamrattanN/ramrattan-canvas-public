@@ -1,4 +1,4 @@
-import { ACTIVE_LANE_LIMITS, BOARD_STATUSES, CARD_TYPES, MAX_CUSTOM_LANE_LIMIT, PRIORITIES, SELECTED_REPOSITORY_KEY, STORAGE_KEY, getBoardMetrics, getCompletionDateISO, getCompletionStatus, getCompletionTimestamp, getDisplayLane, getGitHubStatus, getRecentDoneRecords, isHistoricalRecord, isValidRepositoryName, legacyRepositoryFromStorage, limitActiveLane, matchesFilters, mergeLaneOrder, repositoryIdentity, mergeGitHubRecords, migrateManualOrder, needsCompletionRefresh, normalizeGitHubImport, normalizeLaneLimit, normalizeManualOrder, recordsForView, sanitizeGitHubText, sortCards, storageKeyForRepository } from "./board-core.mjs";
+import { ACTIVE_LANE_LIMITS, BOARD_STATUSES, CARD_TYPES, MAX_CUSTOM_LANE_LIMIT, PRIORITIES, SELECTED_REPOSITORY_KEY, STORAGE_KEY, getBoardMetrics, getCompletionDateISO, getCompletionStatus, getCompletionTimestamp, getDisplayLane, getGitHubStatus, getRecentDoneRecords, getDisplayedDoneRecords, normalizeDoneDisplay, isHistoricalRecord, isValidRepositoryName, legacyRepositoryFromStorage, limitActiveLane, matchesFilters, mergeLaneOrder, repositoryIdentity, mergeGitHubRecords, migrateManualOrder, needsCompletionRefresh, normalizeGitHubImport, normalizeLaneLimit, normalizeManualOrder, recordsForView, sanitizeGitHubText, sortCards, storageKeyForRepository } from "./board-core.mjs";
 
 const $ = (selector) => document.querySelector(selector);
 const grid = $("#board-grid");
@@ -18,6 +18,7 @@ let isRefreshing = false;
 let lastRefreshAt;
 let currentView;
 let activeLaneLimit;
+let doneDisplay = 20;
 let customLaneLimitPending = false;
 let availableRepositories = [];
 let repositoryListError = "";
@@ -55,6 +56,7 @@ function resetBoardState() {
   lastRefreshAt = null;
   currentView = "Active work";
   activeLaneLimit = "all";
+  doneDisplay = 20;
   customLaneLimitPending = false;
 }
 
@@ -68,6 +70,7 @@ function loadLocalState() {
     lastRefreshAt = saved.lastRefreshAt ?? null;
     if (["Active work", "All records", "History"].includes(saved.currentView)) currentView = saved.currentView;
     activeLaneLimit = normalizeLaneLimit(saved.activeLaneLimit) ?? "all";
+    doneDisplay = normalizeDoneDisplay(saved.doneDisplay);
     const savedSnapshot = Array.isArray(saved.records) ? { repository, records: saved.records } : bundledSnapshotFor(repository);
     cards = normalizeGitHubImport(savedSnapshot, repository, saved.cardMetadata ?? {}).records;
     manualOrder = migrateManualOrder(saved.manualOrder, cards, repository);
@@ -91,7 +94,7 @@ function persistLocalState() {
   const records = cards.map(({ number, type, title, description, url, githubState, stateReason, closedAt, merged, mergedAt, draft, ciStatus, ciChecks, updatedAt, assignees, labels, summary, workstream, priority, boardStatus, boardStatusExplicit, pinnedActive, dependencies, missingFromLatestRefresh }) => ({
     number, type, title, description, url, githubState, stateReason, closedAt, merged, mergedAt, draft, ciStatus, ciChecks, updatedAt, assignees, labels, summary, workstream, priority, boardStatus, boardStatusExplicit, pinnedActive, dependencies, missingFromLatestRefresh,
   }));
-  localStorage.setItem(storageKeyForRepository(repository, legacyRepository), JSON.stringify({ repository, sourceLabel, importedAt, lastRefreshAt, currentView, activeLaneLimit, records, cardMetadata, manualOrder }));
+  localStorage.setItem(storageKeyForRepository(repository, legacyRepository), JSON.stringify({ repository, sourceLabel, importedAt, lastRefreshAt, currentView, activeLaneLimit, doneDisplay, records, cardMetadata, manualOrder }));
 }
 
 function showNotice(message, kind = "") {
@@ -270,10 +273,10 @@ function render() {
   fillFilter("#filter-type", CARD_TYPES, "All types");
   fillFilter("#filter-workstream", [...new Set(cards.map((card) => card.workstream))].sort(), "All workstreams");
   const now = new Date();
-  const doneRecords = getRecentDoneRecords(cards, now);
+  const doneRecords = getDisplayedDoneRecords(cards, now, doneDisplay);
   const doneKeys = new Set(doneRecords.map((card) => card.key));
   const filters = getFilters();
-  const viewRecords = recordsForView(cards, currentView, now);
+  const viewRecords = recordsForView(cards, currentView, now, doneDisplay);
   const visible = viewRecords.filter((card) => matchesFilters(card, filters, doneKeys));
   const visibleDone = doneRecords.filter((card) => matchesFilters(card, filters, doneKeys));
   const metrics = getBoardMetrics(cards, now);
@@ -285,7 +288,7 @@ function render() {
     const laneId = status.toLowerCase().replaceAll(" ", "-");
     const limitLabel = laneCards.length < total ? `<small class="done-window-label lane-limit-label">Showing ${laneCards.length} of ${total}</small>` : "";
     return `<section class="lane lane-${laneId}" data-lane="${escapeHtml(status)}" aria-label="${escapeHtml(status)} lane">
-      <header class="lane-header"><h3>${escapeHtml(status)}</h3><span class="lane-count">${total}</span>${status === "Done" ? `<small class="done-window-label">Recent · rolling 14 days · max 20</small>` : limitLabel}</header>
+      <header class="lane-header"><h3>${escapeHtml(status)}</h3><span class="lane-count">${total}</span>${status === "Done" ? `<small class="done-window-label">${doneDisplay === 20 ? "Recent · rolling 14 days · max 20" : `Showing ${total} of ${metrics.totalCompleted} completed`}</small>` : limitLabel}</header>
       <div class="lane-body" data-drop-lane="${escapeHtml(status)}">${laneCards.map((card) => renderCard(card, status)).join("") || `<p class="lane-empty">${status === "Done" ? "No verified recent completions." : `No cards in ${escapeHtml(currentView.toLowerCase())}.`}</p>`}</div>
     </section>`;
   }).join("");
@@ -304,7 +307,8 @@ function render() {
   $("#active-github-count").textContent = String(metrics.activeGitHubRecords);
   $("#blocked-count").textContent = String(metrics.blockedActiveWork);
   $("#review-count").textContent = String(metrics.inReview);
-  $("#done-count").textContent = String(metrics.doneRecently);
+  $("#done-count").textContent = String(doneRecords.length);
+  $("#done-count-label").textContent = doneDisplay === 20 ? "Done recently" : "Done displayed";
   $("#total-completed-count").textContent = String(metrics.totalCompleted);
   $("#history-count").textContent = String(metrics.historicalRecords);
   $("#total-count").textContent = String(metrics.totalTracked);
@@ -328,6 +332,7 @@ function render() {
     : sourceLabel === "GitHub CLI read-only refresh" ? "Read-only refresh · GitHub remains authoritative" : `${sourceLabel} · manual snapshot`;
   $("#snapshot-note").classList.toggle("completion-refresh-needed", completionRefreshNeeded);
   renderLaneLimitControl();
+  $("#done-display").value = String(doneDisplay);
   $("#refresh-button").disabled = isRefreshing;
   $("#refresh-button").setAttribute("aria-busy", String(isRefreshing));
   attachCardEvents();
@@ -571,6 +576,11 @@ $("#lane-limit").addEventListener("change", (event) => {
   }
 });
 $("#lane-limit-custom").addEventListener("change", (event) => setLaneLimit(event.target.value));
+$("#done-display").addEventListener("change", (event) => {
+  doneDisplay = normalizeDoneDisplay(event.target.value);
+  persistLocalState();
+  render();
+});
 $("#import-trigger").addEventListener("click", () => $("#import-file").click());
 $("#import-file").addEventListener("change", (event) => importFile(event.target.files?.[0]));
 $("#refresh-button").addEventListener("click", refreshFromGitHub);

@@ -5,6 +5,10 @@ export const STORAGE_KEY = "ramrattan-kanban-canvas-v1";
 export const SELECTED_REPOSITORY_KEY = "ramrattan-kanban-canvas-selected-repository";
 export const DONE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 export const MAX_DONE_CARDS = 20;
+export const DONE_DISPLAY_OPTIONS = [20, 50, 100, "all"];
+export function normalizeDoneDisplay(value) {
+  return value === "all" ? "all" : [20, 50, 100].includes(Number(value)) ? Number(value) : 20;
+}
 export const ACTIVE_LANE_LIMITS = [25, 50, 75, 100, 200];
 export const MAX_CUSTOM_LANE_LIMIT = 10000;
 
@@ -108,6 +112,19 @@ export function getRecentDoneRecords(cards, now = new Date(), limit = MAX_DONE_C
     .map(({ card }) => card);
 }
 
+// The default keeps the existing 14-day window. Expanded modes show older verified completions without changing GitHub state.
+export function getDisplayedDoneRecords(cards, now = new Date(), display = 20) {
+  const normalized = normalizeDoneDisplay(display);
+  if (normalized === 20) return getRecentDoneRecords(cards, now);
+  const referenceTime = now instanceof Date ? now.getTime() : Date.parse(now);
+  if (!Number.isFinite(referenceTime)) throw new Error("Done-window reference time must be valid.");
+  return cards.map((card) => ({ card, timestamp: getCompletionTimestamp(card) }))
+    .filter(({ timestamp }) => timestamp !== null && timestamp <= referenceTime)
+    .sort((left, right) => right.timestamp - left.timestamp || left.card.key.localeCompare(right.card.key))
+    .slice(0, normalized === "all" ? cards.length : normalized)
+    .map(({ card }) => card);
+}
+
 export function isHistoricalRecord(card) {
   return card.githubState === "closed";
 }
@@ -116,12 +133,12 @@ export function isActiveRecord(card) {
   return card.githubState === "open" || (card.pinnedActive && isHistoricalRecord(card));
 }
 
-export function recordsForView(cards, view, now = new Date()) {
+export function recordsForView(cards, view, now = new Date(), doneDisplay = 20) {
   if (view === "History") return cards.filter(isHistoricalRecord);
   if (view === "All records") return [...cards];
   const active = cards.filter(isActiveRecord);
   const activeKeys = new Set(active.map((card) => card.key));
-  return [...active, ...getRecentDoneRecords(cards, now).filter((card) => !activeKeys.has(card.key))];
+  return [...active, ...getDisplayedDoneRecords(cards, now, doneDisplay).filter((card) => !activeKeys.has(card.key))];
 }
 
 export function getBoardMetrics(cards, now = new Date()) {

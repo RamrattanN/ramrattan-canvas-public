@@ -58,6 +58,10 @@ Boards are saved in the browser's `localStorage`, under one key per repository: 
 - Clearing site data in the browser deletes saved boards.  Export first if you want a backup.
 - `github-snapshot.json` is an empty starter file.  Canvas loads every board from GitHub through the CLI.
 
+## Done column display
+
+The Done column defaults to the newest 20 verified completions from the past 14 days.  Its independent dropdown offers 50, 100 or All to inspect older completions without affecting active-column limits.  Display settings are saved separately for each repository, and GitHub remains read-only and authoritative.  History retains closed records regardless of the Done setting.
+
 ## Demonstration board
 
 The fictional Orbitron Sprocket Works board is built from a bundled synthetic snapshot of 30 `[DEMO]` records, with no GitHub access needed.  `npm run demo:fixture` builds the board, and `npm run demo:capture` verifies it in a disposable Chrome profile and regenerates the screenshots in `docs/demo/images/`.  See [docs/demo/orbitron-sprocket-works.md](docs/demo/orbitron-sprocket-works.md).
